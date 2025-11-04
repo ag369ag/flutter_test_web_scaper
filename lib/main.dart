@@ -132,15 +132,15 @@ class _MainPageState extends State<MainPage> {
             ),
             SizedBox(width: 10),
             ComponentFloatingButton(
-              buttonFunction: () => showSearchDialog(context),
-              isVisible: mangaService.showMenu,
-              buttonIcon: Icons.search,
-            ),
-            SizedBox(width: 10),
-            ComponentFloatingButton(
               buttonFunction: () => mangaService.nextPageClicked(),
               isVisible: mangaService.showMenu,
               buttonIcon: Icons.arrow_right_rounded,
+            ),
+            SizedBox(width: 10),
+            ComponentFloatingButton(
+              buttonFunction: () => showSearchDialog(context),
+              isVisible: mangaService.showMenu,
+              buttonIcon: Icons.search,
             ),
             SizedBox(width: 10),
             ComponentFloatingButton(
