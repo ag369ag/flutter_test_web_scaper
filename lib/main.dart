@@ -99,7 +99,7 @@ class _MainPageState extends State<MainPage> {
                                         ),
                                       );
                                     },
-                                    child: ComponentMangaDisplay(manga: manga),
+                                    child: ComponentMangaDisplay(manga: manga, screenSize: _screenSize,),
                                   ),
                                 )
                                 .toList()

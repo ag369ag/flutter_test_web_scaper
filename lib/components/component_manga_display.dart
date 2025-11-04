@@ -3,10 +3,16 @@ import 'package:manga/model/model_manga_info.dart';
 
 class ComponentMangaDisplay extends StatelessWidget {
   final ModelMangaInfo manga;
-  const ComponentMangaDisplay({super.key, required this.manga});
+  final Size screenSize;
+  const ComponentMangaDisplay({
+    super.key,
+    required this.manga,
+    required this.screenSize,
+  });
 
   @override
   Widget build(BuildContext context) {
+
     return Card(
       child: Container(
         padding: EdgeInsets.all(10),
