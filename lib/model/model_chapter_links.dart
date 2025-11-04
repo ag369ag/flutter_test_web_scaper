@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
-import 'package:test_web_scraping/model/model_manga_page.dart';
+import 'package:manga/model/model_manga_page.dart';
 
 class ModelChapterLinks extends ChangeNotifier {
   final String chapter;
@@ -14,32 +14,36 @@ class ModelChapterLinks extends ChangeNotifier {
   List<ModelMangaPage> get pages => _pages;
 
   getPages() async {
-    _pages.clear();
-    notifyListeners();
-
-    var chapterResponse = await http.get(Uri.parse(link));
-    dom.Document chapterValue = htmlparser.parse(chapterResponse.body);
-    dom.Element mangaReaderPart = chapterValue.getElementsByClassName(
-      "slideshow-container",
-    )[0];
-
-    for (var imagePart in mangaReaderPart.getElementsByClassName(
-      "image_orientation",
-    )) {
-      ModelMangaPage mmp = ModelMangaPage(
-        imgLink: imagePart
-            .getElementsByClassName("mySlides fade")[0]
-            .getElementsByTagName("img")[0]
-            .attributes["src"]
-            .toString(),
-      );
-
-      _pages.add(mmp);
+    try {
+      _pages.clear();
       notifyListeners();
-    }
 
-    for (var page in _pages) {
-      page.loadImage();
+      var chapterResponse = await http.get(Uri.parse(link));
+      dom.Document chapterValue = htmlparser.parse(chapterResponse.body);
+      dom.Element mangaReaderPart = chapterValue.getElementsByClassName(
+        "slideshow-container",
+      )[0];
+
+      for (var imagePart in mangaReaderPart.getElementsByClassName(
+        "image_orientation",
+      )) {
+        ModelMangaPage mmp = ModelMangaPage(
+          imgLink: imagePart
+              .getElementsByClassName("mySlides fade")[0]
+              .getElementsByTagName("img")[0]
+              .attributes["src"]
+              .toString(),
+        );
+
+        _pages.add(mmp);
+        notifyListeners();
+      }
+
+      for (var page in _pages) {
+        page.loadImage();
+      }
+    } catch (_) {
+      getPages();
     }
   }
 }

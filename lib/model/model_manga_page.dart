@@ -5,16 +5,17 @@ import 'package:http/http.dart' as http;
 class ModelMangaPage extends ChangeNotifier {
   final String imgLink;
 
-  ModelMangaPage({
-    required this.imgLink
-  });
+  ModelMangaPage({required this.imgLink});
 
   Uint8List? imageData;
 
-  
-  loadImage()async{
-    var response = await http.get(Uri.parse(imgLink));
-    imageData = response.bodyBytes;
-    notifyListeners();
+  loadImage() async {
+    try {
+      var response = await http.get(Uri.parse(imgLink));
+      imageData = response.bodyBytes;
+      notifyListeners();
+    } catch (_) {
+      loadImage();
+    }
   }
 }

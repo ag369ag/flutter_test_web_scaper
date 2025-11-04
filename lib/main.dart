@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:test_web_scraping/components/component_floating_button.dart';
-import 'package:test_web_scraping/components/component_manga_display.dart';
-import 'package:test_web_scraping/service/service_manga.dart';
+import 'package:manga/components/component_custom_textfield.dart';
+import 'package:manga/components/component_floating_button.dart';
+import 'package:manga/components/component_manga_display.dart';
+import 'package:manga/pages/page_chapters.dart';
+import 'package:manga/service/service_manga.dart';
 // import 'package:html/dom.dart' as dom;
 // import 'package:http/http.dart' as http;
 // import 'package:html/parser.dart' as parser;
@@ -11,6 +13,8 @@ import 'package:test_web_scraping/service/service_manga.dart';
 // import 'package:test_web_scraping/mangaService.dart';
 
 ServiceManga mangaService = ServiceManga();
+TextEditingController searchFieldController = TextEditingController();
+late Size _screenSize;
 
 void main() {
   runApp(const MyApp());
@@ -34,27 +38,83 @@ class MainScaffold extends StatelessWidget {
   }
 }
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    mangaService.getMangaList();
+  State<MainPage> createState() => _MainPageState();
+}
 
+class _MainPageState extends State<MainPage> {
+  @override
+  void initState() {
+    super.initState();
+    mangaService.getMangaList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _screenSize = MediaQuery.of(context).size;
     return Scaffold(
       body: SafeArea(
         child: Container(
           padding: EdgeInsets.all(10),
           child: ListenableBuilder(
             listenable: mangaService,
-            builder: (_, _) => SingleChildScrollView(
-              child: Wrap(
-                children: mangaService.mangaListInfo.isNotEmpty
-                    ? mangaService.mangaListInfo
-                          .map((manga) => ComponentMangaDisplay(manga: manga))
-                          .toList()
-                    : [],
-              ),
+            builder: (_, _) => Column(
+              children: [
+                Visibility(
+                  visible: mangaService.searchedTitle != "",
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Searched: ${mangaService.searchedTitle}"),
+                          IconButton(
+                            onPressed: () => mangaService.removeSearchedTitle(),
+                            icon: Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      children: mangaService.mangaListInfo.isNotEmpty
+                          ? mangaService.mangaListInfo
+                                .map(
+                                  (manga) => GestureDetector(
+                                    onTap: () {
+                                      manga.mangaClicked();
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              PageChapters(manga: manga),
+                                        ),
+                                      );
+                                    },
+                                    child: ComponentMangaDisplay(manga: manga),
+                                  ),
+                                )
+                                .toList()
+                          : [
+                              Container(
+                                width: _screenSize.width - 10,
+                                height: _screenSize.height - 10,
+                                alignment: Alignment.center,
+                                child: CircularProgressIndicator(),
+                              ),
+                            ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -66,19 +126,19 @@ class MainPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             ComponentFloatingButton(
-              buttonFunction: () {},
+              buttonFunction: () => mangaService.backPageClicked(),
               isVisible: mangaService.showMenu,
               buttonIcon: Icons.arrow_left_rounded,
             ),
             SizedBox(width: 10),
             ComponentFloatingButton(
-              buttonFunction: () {},
+              buttonFunction: () => showSearchDialog(context),
               isVisible: mangaService.showMenu,
               buttonIcon: Icons.search,
             ),
             SizedBox(width: 10),
             ComponentFloatingButton(
-              buttonFunction: () {},
+              buttonFunction: () => mangaService.nextPageClicked(),
               isVisible: mangaService.showMenu,
               buttonIcon: Icons.arrow_right_rounded,
             ),
@@ -93,6 +153,56 @@ class MainPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  showSearchDialog(BuildContext context) {
+    showDialog(
+      barrierDismissible: false,
+      useSafeArea: true,
+      context: context,
+      builder: (context) {
+        searchFieldController.clear();
+        return Dialog(
+          child: Stack(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+              Container(
+                width: 400,
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Search", style: TextStyle(fontSize: 20)),
+                    SizedBox(height: 5),
+                    ComponentCustomTextfield(
+                      fieldController: searchFieldController,
+                      label: "Title",
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: (){
+                        Navigator.pop(context);
+                        mangaService.searchManga(searchFieldController.text);
+                      },
+                      child: Text("Search"),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

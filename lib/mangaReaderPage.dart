@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_web_scraping/mangaService.dart';
+import 'package:manga/mangaService.dart';
 
 class Mangareaderpage extends StatelessWidget {
   final Mangaservice mangaservice;

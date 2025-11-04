@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_web_scraping/model/model_manga_page.dart';
+import 'package:manga/model/model_manga_page.dart';
 
 class ComponentMangaPage extends StatelessWidget {
   final ModelMangaPage page;

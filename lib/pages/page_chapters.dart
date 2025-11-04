@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:test_web_scraping/model/model_manga_info.dart';
-import 'package:test_web_scraping/pages/page_reader.dart';
+import 'package:manga/model/model_manga_info.dart';
+import 'package:manga/pages/page_reader.dart';
 
 class PageChapters extends StatelessWidget {
   final ModelMangaInfo manga;
@@ -11,10 +11,18 @@ class PageChapters extends StatelessWidget {
     Widget topPart() {
       return Expanded(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              manga.mangaTitle,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(
+                  child: Text(
+                    manga.mangaTitle,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
             Text(manga.mangaStatus),
             SizedBox(height: 5),
@@ -34,12 +42,15 @@ class PageChapters extends StatelessWidget {
         children: manga.chapters
             .map(
               (chapter) => GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PageReader(mangaChapter: chapter),
-                  ),
-                ),
+                onTap: () {
+                  chapter.getPages();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PageReader(mangaChapter: chapter),
+                    ),
+                  );
+                },
                 child: Card(
                   child: Padding(
                     padding: EdgeInsetsGeometry.all(10),
@@ -61,7 +72,11 @@ class PageChapters extends StatelessWidget {
         child: Column(
           children: [
             topPart(),
-            Expanded(child: chapterList()),
+            SizedBox(height: 10,),
+            Expanded(
+              flex: 2,
+              child: SingleChildScrollView(child: chapterList()),
+            ),
           ],
         ),
       );
@@ -69,22 +84,32 @@ class PageChapters extends StatelessWidget {
 
     Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
-      body: ListenableBuilder(
-        listenable: manga,
-        builder: (_, _) {
-          return Stack(
-            children: [
-              SizedBox(
-                height: screenSize.height * 0.5,
-                width: screenSize.width,
-                child: manga.mangaImage != null
-                    ? CircularProgressIndicator()
-                    : Image.memory(manga.mangaImage!),
-              ),
-              mangaPart(),
-            ],
-          );
-        },
+      body: SafeArea(
+        child: ListenableBuilder(
+          listenable: manga,
+          builder: (_, _) {
+            return Stack(
+              children: [
+                SizedBox(
+                  height: screenSize.height,
+                  width: screenSize.width,
+                  child: manga.mangaImage == null
+                      ? Container(
+                          alignment: Alignment.center,
+                          child: CircularProgressIndicator(),
+                        )
+                      : Image.memory(
+                          manga.mangaImage!,
+                          fit: BoxFit.fill,
+                          opacity: AlwaysStoppedAnimation(0.2),
+                        ),
+                ),
+                
+                mangaPart(),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
-import 'package:test_web_scraping/model/model_chapter_links.dart';
+import 'package:manga/model/model_chapter_links.dart';
 
 class ModelMangaInfo extends ChangeNotifier {
   final String mangaImageLink;
@@ -27,46 +27,67 @@ class ModelMangaInfo extends ChangeNotifier {
   List<ModelChapterLinks> get chapters => _chapters;
 
   getMangaImage() async {
-    var response = await http.get(Uri.parse(mangaImageLink));
-    _mangaImage = response.bodyBytes;
+    try {
+      // var response = await http.get(Uri.parse(mangaImageLink));
 
-    notifyListeners();
+      // print(response.bodyBytes);
+      // _mangaImage = response.bodyBytes;
+
+      var mangaClickedResponse = await http.get(Uri.parse(mangaLink));
+      dom.Document mangaInfo = htmlparser.parse(mangaClickedResponse.body);
+
+      for (dom.Element meta in mangaInfo.getElementsByTagName("meta")) {
+        if (meta.attributes["property"] == "og:image") {
+          var response = await http.get(
+            Uri.parse(meta.attributes["content"].toString()),
+          );
+          _mangaImage = response.bodyBytes;
+          notifyListeners();
+          break;
+        }
+      }
+    } catch (_) {
+      getMangaImage();
+    }
   }
 
   mangaClicked() async {
+    try {
+      _chapters.clear();
+      notifyListeners();
 
-    _chapters.clear();
-    notifyListeners();
+      var mangaClickedResponse = await http.get(Uri.parse(mangaLink));
+      dom.Document mangaInfo = htmlparser.parse(mangaClickedResponse.body);
 
-    var mangaClickedResponse = await http.get(Uri.parse(mangaLink));
-    dom.Document mangaInfo = htmlparser.parse(mangaClickedResponse.body);
-
-    _mangaDescription = mangaInfo
-        .getElementsByClassName("manga_series_description")[0]
-        .getElementsByTagName("p")[0]
-        .text
-        .trim();
-
-    notifyListeners();
-
-    dom.Element mangaSeriesList = mangaInfo.getElementsByClassName(
-      "manga_series_list",
-    )[0];
-
-    for (var chapter in mangaSeriesList.getElementsByTagName("tr")) {
-      if (chapter.getElementsByTagName("td").isEmpty) {
-        continue;
-      }
-
-      _chapters.add(
-        ModelChapterLinks(
-          chapter: chapter.getElementsByTagName("td")[0].text,
-          link:
-              "http://mangafreak.me${chapter.getElementsByTagName("td")[0].getElementsByTagName("a")[0].attributes["href"]}",
-        ),
-      );
+      _mangaDescription = mangaInfo
+          .getElementsByClassName("manga_series_description")[0]
+          .getElementsByTagName("p")[0]
+          .text
+          .trim();
 
       notifyListeners();
+
+      dom.Element mangaSeriesList = mangaInfo.getElementsByClassName(
+        "manga_series_list",
+      )[0];
+
+      for (var chapter in mangaSeriesList.getElementsByTagName("tr")) {
+        if (chapter.getElementsByTagName("td").isEmpty) {
+          continue;
+        }
+
+        _chapters.add(
+          ModelChapterLinks(
+            chapter: chapter.getElementsByTagName("td")[0].text,
+            link:
+                "http://mangafreak.me${chapter.getElementsByTagName("td")[0].getElementsByTagName("a")[0].attributes["href"]}",
+          ),
+        );
+
+        notifyListeners();
+      }
+    } catch (_) {
+      mangaClicked();
     }
   }
 }

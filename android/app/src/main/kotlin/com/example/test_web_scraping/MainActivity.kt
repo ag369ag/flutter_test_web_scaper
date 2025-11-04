@@ -1,4 +1,4 @@
-package com.example.test_web_scraping
+package com.example.manga
 
 import io.flutter.embedding.android.FlutterActivity
 

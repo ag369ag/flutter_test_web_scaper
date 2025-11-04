@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_web_scraping/model/model_manga_info.dart';
+import 'package:manga/model/model_manga_info.dart';
 
 class ComponentMangaDisplay extends StatelessWidget {
   final ModelMangaInfo manga;
@@ -10,20 +10,41 @@ class ComponentMangaDisplay extends StatelessWidget {
     return Card(
       child: Container(
         padding: EdgeInsets.all(10),
-        width: 150,
-        height: 200,
+        width: 185,
+        height: 230,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListenableBuilder(
               listenable: manga,
-              builder: (_,_) => SizedBox(
-                height: 130,
-                width: 130,
+              builder: (_, _) => SizedBox(
+                height: 150,
+                width: 165,
                 child: manga.mangaImage == null
                     ? Center(child: CircularProgressIndicator())
-                    : Image.memory(manga.mangaImage!),
+                    : Image.memory(manga.mangaImage!, fit: BoxFit.fill),
               ),
             ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    manga.mangaTitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+
+            Text(manga.mangaStatus),
+            // Expanded(
+            //   child: ListTile(
+            //     title: Text(manga.mangaTitle, maxLines: 2,overflow: TextOverflow.ellipsis,),
+            //     subtitle: Text(manga.mangaStatus),
+            //   ),
+            // )
           ],
         ),
       ),
