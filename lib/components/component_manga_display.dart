@@ -38,7 +38,9 @@ class ComponentMangaDisplay extends StatelessWidget {
                 width: containerWidth - 20,
                 child: manga.mangaImage == null
                     ? Center(child: CircularProgressIndicator())
-                    : Image.memory(manga.mangaImage!, fit: BoxFit.fill),
+                    : InteractiveViewer(
+                      maxScale: 5,
+                      child: Image.memory(manga.mangaImage!, fit: BoxFit.fill)),
               ),
             ),
             Row(
