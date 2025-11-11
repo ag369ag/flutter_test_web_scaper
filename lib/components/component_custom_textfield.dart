@@ -11,13 +11,14 @@ class ComponentCustomTextfield extends StatelessWidget {
       controller: fieldController,
       minLines: 1,
       maxLines: 2,
+      textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         labelText: label,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         floatingLabelAlignment: FloatingLabelAlignment.start,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-        )
+        ),
       ),
     );
   }

@@ -1,31 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:manga/model/model_manga_info.dart';
 
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+
 class ComponentMangaDisplay extends StatelessWidget {
   final ModelMangaInfo manga;
-  final Size screenSize;
+  final double containerWidth;
   const ComponentMangaDisplay({
     super.key,
     required this.manga,
-    required this.screenSize,
+    required this.containerWidth,
   });
 
   @override
   Widget build(BuildContext context) {
-
     return Card(
+      color: Colors.white,
       child: Container(
         padding: EdgeInsets.all(10),
-        width: 185,
-        height: 230,
+        width: containerWidth,
+        height: containerWidth * 1.24324,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListenableBuilder(
               listenable: manga,
               builder: (_, _) => SizedBox(
-                height: 150,
-                width: 165,
+                height: ((containerWidth - 20 ) * 0.97) ,
+                width: containerWidth - 20,
                 child: manga.mangaImage == null
                     ? Center(child: CircularProgressIndicator())
                     : Image.memory(manga.mangaImage!, fit: BoxFit.fill),
@@ -56,4 +66,6 @@ class ComponentMangaDisplay extends StatelessWidget {
       ),
     );
   }
+
 }
+

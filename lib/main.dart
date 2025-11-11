@@ -15,6 +15,7 @@ import 'package:manga/service/service_manga.dart';
 ServiceManga mangaService = ServiceManga();
 TextEditingController searchFieldController = TextEditingController();
 late Size _screenSize;
+double _containerWidth = 0;
 
 void main() {
   runApp(const MyApp());
@@ -34,7 +35,7 @@ class MainScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: MainPage());
+    return Scaffold(body: MainPage(), resizeToAvoidBottomInset: false,);
   }
 }
 
@@ -55,7 +56,20 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     _screenSize = MediaQuery.of(context).size;
+    double screenWidthNoPadding = _screenSize.width - 20;
+    if(screenWidthNoPadding > 185 && (screenWidthNoPadding - 5) < 370 ){
+      _containerWidth = screenWidthNoPadding;
+    }
+
+    else if((screenWidthNoPadding - 5)  > 369 && screenWidthNoPadding - 3 < 555){
+      _containerWidth = ((screenWidthNoPadding - 25)/2);
+    }
+
+    else {
+      _containerWidth = ((screenWidthNoPadding - 50)/4);
+    }
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Container(
           padding: EdgeInsets.all(10),
@@ -85,6 +99,10 @@ class _MainPageState extends State<MainPage> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Wrap(
+                      spacing: 5,
+                      runSpacing: 5,
+                      runAlignment: WrapAlignment.center,
+                      alignment: WrapAlignment.center,
                       children: mangaService.mangaListInfo.isNotEmpty
                           ? mangaService.mangaListInfo
                                 .map(
@@ -99,7 +117,7 @@ class _MainPageState extends State<MainPage> {
                                         ),
                                       );
                                     },
-                                    child: ComponentMangaDisplay(manga: manga, screenSize: _screenSize,),
+                                    child: ComponentMangaDisplay(manga: manga, containerWidth: _containerWidth,),
                                   ),
                                 )
                                 .toList()
@@ -163,45 +181,52 @@ class _MainPageState extends State<MainPage> {
       context: context,
       builder: (context) {
         searchFieldController.clear();
-        return Dialog(
-          child: Stack(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              Container(
-                width: 400,
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
+        return 
+          Dialog(
+            insetPadding: EdgeInsets.zero,
+            child: SingleChildScrollView(
+              child: Container(
+                        constraints: BoxConstraints(minWidth: 400, maxWidth: 400, minHeight: 210, maxHeight: 210),
+                child: Stack(
                   children: [
-                    Text("Search", style: TextStyle(fontSize: 20)),
-                    SizedBox(height: 5),
-                    ComponentCustomTextfield(
-                      fieldController: searchFieldController,
-                      label: "Title",
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(Icons.close_rounded),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: (){
-                        Navigator.pop(context);
-                        mangaService.searchManga(searchFieldController.text);
-                      },
-                      child: Text("Search"),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
+                      constraints: BoxConstraints(minWidth: 400, maxWidth: 400),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Search", style: TextStyle(fontSize: 20)),
+                          SizedBox(height: 5),
+                          ComponentCustomTextfield(
+                            fieldController: searchFieldController,
+                            label: "Title",
+                          ),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: (){
+                              Navigator.pop(context);
+                              mangaService.searchManga(searchFieldController.text);
+                            },
+                            child: Text("Search"),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        );
+            ),
+          );
       },
     );
   }
