@@ -12,7 +12,9 @@ class ComponentMangaPage extends StatelessWidget {
       listenable: page,
       builder: (_, _) {
         return page.imageData != null
-            ? Image.memory(page.imageData!)
+            ? InteractiveViewer(
+              maxScale: 5,
+              child: Image.memory(page.imageData!))
             : SizedBox(
                 height: 300,
                 width: screenSize.width,
