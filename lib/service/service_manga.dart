@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:manga/model/model_chapter_links.dart';
+import 'package:manga/model/model_manga_history.dart';
 import 'package:manga/model/model_manga_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ServiceManga extends ChangeNotifier {
   final List<ModelMangaInfo> _mangaListInfo = [];
@@ -17,13 +22,76 @@ class ServiceManga extends ChangeNotifier {
   String _searchedTitle = "";
   String get searchedTitle => _searchedTitle;
 
+  late SharedPreferences _sharedPref;
+  List<ModelMangaHistory> _mangaHistory = [];
+  List<ModelMangaHistory> get mangaHistory => _mangaHistory;
+
+  init() async {
+    _sharedPref = await SharedPreferences.getInstance();
+
+    String? mangaHistoryFromPrefs = _sharedPref.getString("mangaHistory");
+
+    if (mangaHistoryFromPrefs == null) {
+      return;
+    }
+
+    List<dynamic> decodedHistory = jsonDecode(mangaHistoryFromPrefs);
+    
+     _mangaHistory = decodedHistory.map((a)=> ModelMangaHistory.fromJson(a as Map<String, dynamic>)).toList();
+    // _mangaHistory = List<ModelMangaHistory>.from(
+    //   jsonDecode(mangaHistoryFromPrefs),
+    // );
+
+    notifyListeners();
+  }
+
+  addMangaHistory(ModelMangaInfo manga, ModelChapterLinks chapter, double pageOffset) async {
+    ModelMangaHistory? connectedHistory = getMangaLastHistory(manga);
+    if (connectedHistory != null) {
+      _mangaHistory
+              .where((pastManga) => pastManga.mangaTitle == manga.mangaTitle)
+              .first
+              .lastChapter =
+          chapter.chapter;
+
+      _mangaHistory
+              .where((pastManga) => pastManga.mangaTitle == manga.mangaTitle)
+              .first
+              .offSet = pageOffset;
+    } else {
+      _mangaHistory.add(ModelMangaHistory(mangaTitle: manga.mangaTitle, lastChapter: chapter.chapter, offSet: pageOffset));
+    }
+
+    String jsonEncodedHistory = jsonEncode(_mangaHistory.map((a)=>a.toJson()).toList());
+
+    await _sharedPref.setString("mangaHistory", jsonEncodedHistory);
+
+    notifyListeners();
+  }
+
+  removeMangaHistory(ModelMangaInfo manga) async {
+    _mangaHistory.removeWhere((element) => element.mangaTitle == manga.mangaTitle);
+    String jsonEncodedHistory = jsonEncode(_mangaHistory.map((a)=>a.toJson()).toList());
+    await _sharedPref.setString("mangaHistory", jsonEncodedHistory);
+  
+    notifyListeners();
+  }
+
+  ModelMangaHistory? getMangaLastHistory(ModelMangaInfo manga){
+    if(_mangaHistory.where((element) => element.mangaTitle == manga.mangaTitle).isEmpty){
+      return null;
+    }
+
+    return _mangaHistory.where((element) => element.mangaTitle == manga.mangaTitle).first;
+  }
+
   updateMenuState() {
     _showMenu = !_showMenu;
     notifyListeners();
   }
 
   nextPageClicked() {
-    if(_searchedTitle != ""){
+    if (_searchedTitle != "") {
       return;
     }
     _pageNumber++;
@@ -32,10 +100,10 @@ class ServiceManga extends ChangeNotifier {
   }
 
   backPageClicked() {
-    if(_searchedTitle != ""){
+    if (_searchedTitle != "") {
       return;
     }
-    
+
     if (_pageNumber == 1) {
       return;
     }
