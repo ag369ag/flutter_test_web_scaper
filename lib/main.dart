@@ -165,6 +165,12 @@ class _MainPageState extends State<MainPage> {
             ),
             SizedBox(width: 10),
             ComponentFloatingButton(
+              buttonFunction: () => showBookmarkedManga(context),
+              isVisible: mangaService.showMenu,
+              buttonIcon: Icons.bookmark_border_rounded,
+            ),
+            SizedBox(width: 10),
+            ComponentFloatingButton(
               buttonFunction: () => mangaService.updateMenuState(),
               isVisible: true,
               buttonIcon: mangaService.showMenu
@@ -237,6 +243,36 @@ class _MainPageState extends State<MainPage> {
           ),
         );
       },
+    );
+  }
+
+  showBookmarkedManga(BuildContext context) {
+    showDialog(
+      barrierDismissible: false,
+      useSafeArea: true,
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: EdgeInsets.zero,
+        child: Container(
+          padding: EdgeInsets.all(10),
+          constraints: BoxConstraints(
+            minWidth: 400,
+            maxWidth: 400,
+            minHeight: 600,
+            maxHeight: 600,
+          ),
+          child: Column(
+            children: mangaService.savedManga
+                .map((manga) => Card(child: Row(
+                  children: [
+                    Image.memory(manga.mangaImage!, height: 50, width: 30,),
+                    Text(manga.mangaTitle),
+                  ],
+                )))
+                .toList(),
+          ),
+        ),
+      ),
     );
   }
 }

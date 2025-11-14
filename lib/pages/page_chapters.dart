@@ -5,7 +5,6 @@ import 'package:manga/model/model_manga_info.dart';
 import 'package:manga/pages/page_reader.dart';
 import 'package:manga/service/service_manga.dart';
 
-
 class PageChapters extends StatelessWidget {
   final ServiceManga mangaService;
   final ModelMangaInfo manga;
@@ -18,6 +17,10 @@ class PageChapters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget topPart() {
+      String saveStatus =
+          mangaService.savedManga.where((item) => item == manga).isEmpty
+          ? "Save"
+          : "Saved";
       return Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,7 +36,17 @@ class PageChapters extends StatelessWidget {
                 ),
               ],
             ),
-            Text(manga.mangaStatus),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(manga.mangaStatus),
+                ElevatedButton(
+                  onPressed: () => mangaService.saveNewManga(manga),
+                  child: Text(saveStatus),
+                ),
+              ],
+            ),
             SizedBox(height: 5),
             Text("Description: "),
             Expanded(
@@ -80,56 +93,60 @@ class PageChapters extends StatelessWidget {
     }
 
     Widget mangaHistory() {
-      return ListenableBuilder(
-        listenable: mangaService,
-        builder: (_, _) => Column(
-          children: mangaService.getMangaLastHistory(manga) == null
-              ? []
-              : [
-                  GestureDetector(
-                    onTap: () {
-                      ModelMangaHistory currentMangaHistory = mangaService
-                          .getMangaLastHistory(manga)!;
-                      ModelChapterLinks chapter = manga.chapters
-                          .where(
-                            (a) => a.chapter == currentMangaHistory.lastChapter,
-                          )
-                          .first;
-                      chapter.getPages();
-                      
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PageReader(
-                            mangaChapter: chapter,
-                            mangaService: mangaService,
-                            manga: manga,
+      return Visibility(
+        visible: manga.chapters.isNotEmpty,
+        child: ListenableBuilder(
+          listenable: mangaService,
+          builder: (_, _) => Column(
+            children: mangaService.getMangaLastHistory(manga) == null
+                ? []
+                : [
+                    GestureDetector(
+                      onTap: () {
+                        ModelMangaHistory currentMangaHistory = mangaService
+                            .getMangaLastHistory(manga)!;
+                        ModelChapterLinks chapter = manga.chapters
+                            .where(
+                              (a) =>
+                                  a.chapter == currentMangaHistory.lastChapter,
+                            )
+                            .first;
+                        chapter.getPages();
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PageReader(
+                              mangaChapter: chapter,
+                              mangaService: mangaService,
+                              manga: manga,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Last read: ${mangaService.getMangaLastHistory(manga)!.lastChapter}",
-                            ),
-                            IconButton(
-                              onPressed: () =>
-                                  mangaService.removeMangaHistory(manga),
-                              icon: Icon(Icons.close_rounded),
-                            ),
-                          ],
+                        );
+                      },
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Last read: ${mangaService.getMangaLastHistory(manga)!.lastChapter}",
+                              ),
+                              IconButton(
+                                onPressed: () =>
+                                    mangaService.removeMangaHistory(manga),
+                                icon: Icon(Icons.close_rounded),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                ],
+                    SizedBox(height: 10),
+                  ],
+          ),
         ),
       );
     }

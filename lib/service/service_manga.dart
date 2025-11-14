@@ -26,26 +26,47 @@ class ServiceManga extends ChangeNotifier {
   List<ModelMangaHistory> _mangaHistory = [];
   List<ModelMangaHistory> get mangaHistory => _mangaHistory;
 
+  List<ModelMangaInfo> _savedManga = [];
+  List<ModelMangaInfo> get savedManga => _savedManga;
+
   init() async {
     _sharedPref = await SharedPreferences.getInstance();
 
     String? mangaHistoryFromPrefs = _sharedPref.getString("mangaHistory");
 
-    if (mangaHistoryFromPrefs == null) {
-      return;
+    if (mangaHistoryFromPrefs != null) {
+      List<dynamic> decodedHistory = jsonDecode(mangaHistoryFromPrefs);
+      _mangaHistory = decodedHistory
+          .map((a) => ModelMangaHistory.fromJson(a as Map<String, dynamic>))
+          .toList();
     }
 
-    List<dynamic> decodedHistory = jsonDecode(mangaHistoryFromPrefs);
-    
-     _mangaHistory = decodedHistory.map((a)=> ModelMangaHistory.fromJson(a as Map<String, dynamic>)).toList();
     // _mangaHistory = List<ModelMangaHistory>.from(
     //   jsonDecode(mangaHistoryFromPrefs),
     // );
 
+    String? savedMangaFromPrefs = _sharedPref.getString("savedManga");
+    if (savedMangaFromPrefs != null) {
+      List<dynamic> decodedSavedManga = jsonDecode(savedMangaFromPrefs);
+      _savedManga = decodedSavedManga
+          .map((e) => ModelMangaInfo.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     notifyListeners();
+    
+    for(var item in savedManga){
+      item.getMangaImage();
+    }
+
+    
   }
 
-  addMangaHistory(ModelMangaInfo manga, ModelChapterLinks chapter, double pageOffset) async {
+  addMangaHistory(
+    ModelMangaInfo manga,
+    ModelChapterLinks chapter,
+    double pageOffset,
+  ) async {
     ModelMangaHistory? connectedHistory = getMangaLastHistory(manga);
     if (connectedHistory != null) {
       _mangaHistory
@@ -57,12 +78,21 @@ class ServiceManga extends ChangeNotifier {
       _mangaHistory
               .where((pastManga) => pastManga.mangaTitle == manga.mangaTitle)
               .first
-              .offSet = pageOffset;
+              .offSet =
+          pageOffset;
     } else {
-      _mangaHistory.add(ModelMangaHistory(mangaTitle: manga.mangaTitle, lastChapter: chapter.chapter, offSet: pageOffset));
+      _mangaHistory.add(
+        ModelMangaHistory(
+          mangaTitle: manga.mangaTitle,
+          lastChapter: chapter.chapter,
+          offSet: pageOffset,
+        ),
+      );
     }
 
-    String jsonEncodedHistory = jsonEncode(_mangaHistory.map((a)=>a.toJson()).toList());
+    String jsonEncodedHistory = jsonEncode(
+      _mangaHistory.map((a) => a.toJson()).toList(),
+    );
 
     await _sharedPref.setString("mangaHistory", jsonEncodedHistory);
 
@@ -70,19 +100,52 @@ class ServiceManga extends ChangeNotifier {
   }
 
   removeMangaHistory(ModelMangaInfo manga) async {
-    _mangaHistory.removeWhere((element) => element.mangaTitle == manga.mangaTitle);
-    String jsonEncodedHistory = jsonEncode(_mangaHistory.map((a)=>a.toJson()).toList());
+    _mangaHistory.removeWhere(
+      (element) => element.mangaTitle == manga.mangaTitle,
+    );
+    String jsonEncodedHistory = jsonEncode(
+      _mangaHistory.map((a) => a.toJson()).toList(),
+    );
     await _sharedPref.setString("mangaHistory", jsonEncodedHistory);
-  
+
     notifyListeners();
   }
 
-  ModelMangaHistory? getMangaLastHistory(ModelMangaInfo manga){
-    if(_mangaHistory.where((element) => element.mangaTitle == manga.mangaTitle).isEmpty){
+  ModelMangaHistory? getMangaLastHistory(ModelMangaInfo manga) {
+    if (_mangaHistory
+        .where((element) => element.mangaTitle == manga.mangaTitle)
+        .isEmpty) {
       return null;
     }
 
-    return _mangaHistory.where((element) => element.mangaTitle == manga.mangaTitle).first;
+    return _mangaHistory
+        .where((element) => element.mangaTitle == manga.mangaTitle)
+        .first;
+  }
+
+  saveNewManga(ModelMangaInfo manga) {
+    if (_savedManga.where((item) => item == manga).isNotEmpty) {
+      return;
+    }
+
+    _savedManga.add(manga);
+    _sharedPref.setString(
+      "savedManga",
+      jsonEncode(_savedManga.map((item) => item.toJson()).toList()),
+    );
+  }
+
+  removeManga(ModelMangaInfo manga) {
+    if (_savedManga.where((item) => item == manga).isEmpty) {
+      return;
+    }
+
+    _savedManga.removeWhere((item) => item == manga);
+    _sharedPref.setString(
+      "savedManga",
+      jsonEncode(_savedManga.map((item) => item.toJson()).toList()),
+    );
+    notifyListeners();
   }
 
   updateMenuState() {

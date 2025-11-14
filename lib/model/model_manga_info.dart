@@ -10,12 +10,14 @@ class ModelMangaInfo extends ChangeNotifier {
   final String mangaTitle;
   final String mangaStatus;
   final String mangaLink;
+  // Uint8List? tempImage;
 
   ModelMangaInfo({
     required this.mangaImageLink,
     required this.mangaTitle,
     required this.mangaStatus,
     required this.mangaLink,
+    // this.tempImage,
   });
 
   Uint8List? _mangaImage;
@@ -25,6 +27,25 @@ class ModelMangaInfo extends ChangeNotifier {
 
   final List<ModelChapterLinks> _chapters = [];
   List<ModelChapterLinks> get chapters => _chapters;
+
+  factory ModelMangaInfo.fromJson(Map<String, dynamic> json) {
+    return ModelMangaInfo(
+      mangaImageLink: json["mangaImageLink"],
+      mangaTitle: json["mangaTitle"],
+      mangaStatus: json["mangaStatus"],
+      mangaLink: json["mangaLink"],
+      // tempImage: json["tempImage"]
+    );
+  }
+
+  Map<String, dynamic> toJson(){
+    return {
+      "mangaImageLink" : mangaImageLink,
+      "mangaTitle" : mangaTitle,
+      "mangaStatus" : mangaStatus,
+      "mangaLink" : mangaLink
+    };
+  }
 
   getMangaImage() async {
     try {
@@ -42,6 +63,7 @@ class ModelMangaInfo extends ChangeNotifier {
             Uri.parse(meta.attributes["content"].toString()),
           );
           _mangaImage = response.bodyBytes;
+          // tempImage = response.bodyBytes;
           notifyListeners();
           break;
         }
