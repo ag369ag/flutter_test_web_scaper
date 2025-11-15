@@ -17,10 +17,6 @@ class PageChapters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget topPart() {
-      String saveStatus =
-          mangaService.savedManga.where((item) => item == manga).isEmpty
-          ? "Save"
-          : "Saved";
       return Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,9 +37,20 @@ class PageChapters extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(manga.mangaStatus),
-                ElevatedButton(
-                  onPressed: () => mangaService.saveNewManga(manga),
-                  child: Text(saveStatus),
+                ListenableBuilder(
+                  listenable: mangaService,
+                  builder: (_, _) {
+                    String saveStatus =
+                        mangaService.savedManga
+                            .where((item) => item.mangaTitle == manga.mangaTitle)
+                            .isEmpty
+                        ? "Save"
+                        : "Saved";
+                    return ElevatedButton(
+                      onPressed: () => mangaService.saveNewManga(manga),
+                      child: Text(saveStatus),
+                    );
+                  },
                 ),
               ],
             ),

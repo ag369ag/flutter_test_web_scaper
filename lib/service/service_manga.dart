@@ -124,7 +124,7 @@ class ServiceManga extends ChangeNotifier {
   }
 
   saveNewManga(ModelMangaInfo manga) {
-    if (_savedManga.where((item) => item == manga).isNotEmpty) {
+    if (_savedManga.where((item) => item.mangaTitle == manga.mangaTitle).isNotEmpty) {
       return;
     }
 
@@ -133,9 +133,11 @@ class ServiceManga extends ChangeNotifier {
       "savedManga",
       jsonEncode(_savedManga.map((item) => item.toJson()).toList()),
     );
+
+    notifyListeners();
   }
 
-  removeManga(ModelMangaInfo manga) {
+  removeSavedManga(ModelMangaInfo manga) {
     if (_savedManga.where((item) => item == manga).isEmpty) {
       return;
     }

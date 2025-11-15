@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manga/components/component_custom_textfield.dart';
 import 'package:manga/components/component_floating_button.dart';
 import 'package:manga/components/component_manga_display.dart';
+import 'package:manga/components/component_saved_manga_display.dart';
 import 'package:manga/pages/page_chapters.dart';
 import 'package:manga/service/service_manga.dart';
 // import 'package:html/dom.dart' as dom;
@@ -252,7 +253,7 @@ class _MainPageState extends State<MainPage> {
       useSafeArea: true,
       context: context,
       builder: (context) => Dialog(
-        insetPadding: EdgeInsets.zero,
+        insetPadding: EdgeInsets.all(15),
         child: Container(
           padding: EdgeInsets.all(10),
           constraints: BoxConstraints(
@@ -262,14 +263,48 @@ class _MainPageState extends State<MainPage> {
             maxHeight: 600,
           ),
           child: Column(
-            children: mangaService.savedManga
-                .map((manga) => Card(child: Row(
-                  children: [
-                    Image.memory(manga.mangaImage!, height: 50, width: 30,),
-                    Text(manga.mangaTitle),
-                  ],
-                )))
-                .toList(),
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Saved manga", style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey
+              ),),
+              SizedBox(height: 5,),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: ListenableBuilder(
+                    listenable: mangaService,
+                    builder: (_, _) => Column(
+                      children: mangaService.savedManga
+                          .map(
+                            (manga) => GestureDetector(
+                              onTap: () {
+                                manga.mangaClicked();
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PageChapters(
+                                      mangaService: mangaService,
+                                      manga: manga,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: ComponentSavedMangaDisplay(
+                                manga: manga,
+                                removeMangaFunction: () =>
+                                    mangaService.removeSavedManga(manga),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
