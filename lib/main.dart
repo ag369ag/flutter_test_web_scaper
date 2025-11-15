@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manga/components/component_custom_textfield.dart';
 import 'package:manga/components/component_floating_button.dart';
 import 'package:manga/components/component_manga_display.dart';
+import 'package:manga/components/component_saved_manga_display.dart';
 import 'package:manga/pages/page_chapters.dart';
 import 'package:manga/service/service_manga.dart';
 // import 'package:html/dom.dart' as dom;
@@ -35,7 +36,7 @@ class MainScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: MainPage(), resizeToAvoidBottomInset: false,);
+    return Scaffold(body: MainPage(), resizeToAvoidBottomInset: false);
   }
 }
 
@@ -50,6 +51,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    mangaService.init();
     mangaService.getMangaList();
   }
 
@@ -57,16 +59,13 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     _screenSize = MediaQuery.of(context).size;
     double screenWidthNoPadding = _screenSize.width - 20;
-    if(screenWidthNoPadding > 185 && (screenWidthNoPadding - 5) < 370 ){
+    if (screenWidthNoPadding > 185 && (screenWidthNoPadding - 5) < 370) {
       _containerWidth = screenWidthNoPadding;
-    }
-
-    else if((screenWidthNoPadding - 5)  > 369 && screenWidthNoPadding - 3 < 555){
-      _containerWidth = ((screenWidthNoPadding - 25)/2);
-    }
-
-    else {
-      _containerWidth = ((screenWidthNoPadding - 50)/4);
+    } else if ((screenWidthNoPadding - 5) > 369 &&
+        screenWidthNoPadding - 3 < 555) {
+      _containerWidth = ((screenWidthNoPadding - 25) / 2);
+    } else {
+      _containerWidth = ((screenWidthNoPadding - 50) / 4);
     }
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -112,12 +111,17 @@ class _MainPageState extends State<MainPage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              PageChapters(manga: manga),
+                                          builder: (context) => PageChapters(
+                                            mangaService: mangaService,
+                                            manga: manga,
+                                          ),
                                         ),
                                       );
                                     },
-                                    child: ComponentMangaDisplay(manga: manga, containerWidth: _containerWidth,),
+                                    child: ComponentMangaDisplay(
+                                      manga: manga,
+                                      containerWidth: _containerWidth,
+                                    ),
                                   ),
                                 )
                                 .toList()
@@ -162,6 +166,12 @@ class _MainPageState extends State<MainPage> {
             ),
             SizedBox(width: 10),
             ComponentFloatingButton(
+              buttonFunction: () => showBookmarkedManga(context),
+              isVisible: mangaService.showMenu,
+              buttonIcon: Icons.bookmark_border_rounded,
+            ),
+            SizedBox(width: 10),
+            ComponentFloatingButton(
               buttonFunction: () => mangaService.updateMenuState(),
               isVisible: true,
               buttonIcon: mangaService.showMenu
@@ -181,53 +191,123 @@ class _MainPageState extends State<MainPage> {
       context: context,
       builder: (context) {
         searchFieldController.clear();
-        return 
-          Dialog(
-            insetPadding: EdgeInsets.zero,
-            child: SingleChildScrollView(
-              child: Container(
-                        constraints: BoxConstraints(minWidth: 400, maxWidth: 400, minHeight: 210, maxHeight: 210),
-                child: Stack(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+        return Dialog(
+          insetPadding: EdgeInsets.zero,
+          child: SingleChildScrollView(
+            child: Container(
+              constraints: BoxConstraints(
+                minWidth: 400,
+                maxWidth: 400,
+                minHeight: 210,
+                maxHeight: 210,
+              ),
+              child: Stack(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
+                    constraints: BoxConstraints(minWidth: 400, maxWidth: 400),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(Icons.close_rounded),
+                        Text("Search", style: TextStyle(fontSize: 20)),
+                        SizedBox(height: 5),
+                        ComponentCustomTextfield(
+                          fieldController: searchFieldController,
+                          label: "Title",
+                        ),
+                        SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            mangaService.searchManga(
+                              searchFieldController.text,
+                            );
+                          },
+                          child: Text("Search"),
                         ),
                       ],
                     ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
-                      constraints: BoxConstraints(minWidth: 400, maxWidth: 400),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text("Search", style: TextStyle(fontSize: 20)),
-                          SizedBox(height: 5),
-                          ComponentCustomTextfield(
-                            fieldController: searchFieldController,
-                            label: "Title",
-                          ),
-                          SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: (){
-                              Navigator.pop(context);
-                              mangaService.searchManga(searchFieldController.text);
-                            },
-                            child: Text("Search"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          );
+          ),
+        );
       },
+    );
+  }
+
+  showBookmarkedManga(BuildContext context) {
+    showDialog(
+      barrierDismissible: false,
+      useSafeArea: true,
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: EdgeInsets.all(15),
+        child: Container(
+          padding: EdgeInsets.all(10),
+          constraints: BoxConstraints(
+            minWidth: 400,
+            maxWidth: 400,
+            minHeight: 600,
+            maxHeight: 600,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Saved manga", style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey
+              ),),
+              SizedBox(height: 5,),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: ListenableBuilder(
+                    listenable: mangaService,
+                    builder: (_, _) => Column(
+                      children: mangaService.savedManga
+                          .map(
+                            (manga) => GestureDetector(
+                              onTap: () {
+                                manga.mangaClicked();
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PageChapters(
+                                      mangaService: mangaService,
+                                      manga: manga,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: ComponentSavedMangaDisplay(
+                                manga: manga,
+                                removeMangaFunction: () =>
+                                    mangaService.removeSavedManga(manga),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

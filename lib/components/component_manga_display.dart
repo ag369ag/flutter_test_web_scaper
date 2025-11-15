@@ -34,7 +34,7 @@ class ComponentMangaDisplay extends StatelessWidget {
             ListenableBuilder(
               listenable: manga,
               builder: (_, _) => SizedBox(
-                height: ((containerWidth - 20 ) * 0.97) ,
+                height: ((containerWidth - 20 ) * 0.94) ,
                 width: containerWidth - 20,
                 child: manga.mangaImage == null
                     ? Center(child: CircularProgressIndicator())

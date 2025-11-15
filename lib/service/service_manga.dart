@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:manga/model/model_chapter_links.dart';
+import 'package:manga/model/model_manga_history.dart';
 import 'package:manga/model/model_manga_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as htmlparser;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ServiceManga extends ChangeNotifier {
   final List<ModelMangaInfo> _mangaListInfo = [];
@@ -17,13 +22,141 @@ class ServiceManga extends ChangeNotifier {
   String _searchedTitle = "";
   String get searchedTitle => _searchedTitle;
 
+  late SharedPreferences _sharedPref;
+  List<ModelMangaHistory> _mangaHistory = [];
+  List<ModelMangaHistory> get mangaHistory => _mangaHistory;
+
+  List<ModelMangaInfo> _savedManga = [];
+  List<ModelMangaInfo> get savedManga => _savedManga;
+
+  init() async {
+    _sharedPref = await SharedPreferences.getInstance();
+
+    String? mangaHistoryFromPrefs = _sharedPref.getString("mangaHistory");
+
+    if (mangaHistoryFromPrefs != null) {
+      List<dynamic> decodedHistory = jsonDecode(mangaHistoryFromPrefs);
+      _mangaHistory = decodedHistory
+          .map((a) => ModelMangaHistory.fromJson(a as Map<String, dynamic>))
+          .toList();
+    }
+
+    // _mangaHistory = List<ModelMangaHistory>.from(
+    //   jsonDecode(mangaHistoryFromPrefs),
+    // );
+
+    String? savedMangaFromPrefs = _sharedPref.getString("savedManga");
+    if (savedMangaFromPrefs != null) {
+      List<dynamic> decodedSavedManga = jsonDecode(savedMangaFromPrefs);
+      _savedManga = decodedSavedManga
+          .map((e) => ModelMangaInfo.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    notifyListeners();
+    
+    for(var item in savedManga){
+      item.getMangaImage();
+    }
+
+    
+  }
+
+  addMangaHistory(
+    ModelMangaInfo manga,
+    ModelChapterLinks chapter,
+    double pageOffset,
+  ) async {
+    ModelMangaHistory? connectedHistory = getMangaLastHistory(manga);
+    if (connectedHistory != null) {
+      _mangaHistory
+              .where((pastManga) => pastManga.mangaTitle == manga.mangaTitle)
+              .first
+              .lastChapter =
+          chapter.chapter;
+
+      _mangaHistory
+              .where((pastManga) => pastManga.mangaTitle == manga.mangaTitle)
+              .first
+              .offSet =
+          pageOffset;
+    } else {
+      _mangaHistory.add(
+        ModelMangaHistory(
+          mangaTitle: manga.mangaTitle,
+          lastChapter: chapter.chapter,
+          offSet: pageOffset,
+        ),
+      );
+    }
+
+    String jsonEncodedHistory = jsonEncode(
+      _mangaHistory.map((a) => a.toJson()).toList(),
+    );
+
+    await _sharedPref.setString("mangaHistory", jsonEncodedHistory);
+
+    notifyListeners();
+  }
+
+  removeMangaHistory(ModelMangaInfo manga) async {
+    _mangaHistory.removeWhere(
+      (element) => element.mangaTitle == manga.mangaTitle,
+    );
+    String jsonEncodedHistory = jsonEncode(
+      _mangaHistory.map((a) => a.toJson()).toList(),
+    );
+    await _sharedPref.setString("mangaHistory", jsonEncodedHistory);
+
+    notifyListeners();
+  }
+
+  ModelMangaHistory? getMangaLastHistory(ModelMangaInfo manga) {
+    if (_mangaHistory
+        .where((element) => element.mangaTitle == manga.mangaTitle)
+        .isEmpty) {
+      return null;
+    }
+
+    return _mangaHistory
+        .where((element) => element.mangaTitle == manga.mangaTitle)
+        .first;
+  }
+
+  saveNewManga(ModelMangaInfo manga) {
+    if (_savedManga.where((item) => item.mangaTitle == manga.mangaTitle).isNotEmpty) {
+      return;
+    }
+
+    _savedManga.add(manga);
+    _sharedPref.setString(
+      "savedManga",
+      jsonEncode(_savedManga.map((item) => item.toJson()).toList()),
+    );
+
+    notifyListeners();
+  }
+
+  removeSavedManga(ModelMangaInfo manga) {
+    if (_savedManga.where((item) => item == manga).isEmpty) {
+      return;
+    }
+
+    _savedManga.removeWhere((item) => item == manga);
+    _sharedPref.setString(
+      "savedManga",
+      jsonEncode(_savedManga.map((item) => item.toJson()).toList()),
+    );
+    notifyListeners();
+  }
+
   updateMenuState() {
     _showMenu = !_showMenu;
     notifyListeners();
   }
 
   nextPageClicked() {
-    if(_searchedTitle != ""){
+    if (_searchedTitle != "") {
       return;
     }
     _pageNumber++;
@@ -32,10 +165,10 @@ class ServiceManga extends ChangeNotifier {
   }
 
   backPageClicked() {
-    if(_searchedTitle != ""){
+    if (_searchedTitle != "") {
       return;
     }
-    
+
     if (_pageNumber == 1) {
       return;
     }
