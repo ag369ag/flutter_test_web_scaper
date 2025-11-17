@@ -124,6 +124,7 @@ class ServiceManga extends ChangeNotifier {
   }
 
   saveNewManga(ModelMangaInfo manga) {
+    print("Save manga triggered");
     if (_savedManga.where((item) => item.mangaTitle == manga.mangaTitle).isNotEmpty) {
       return;
     }

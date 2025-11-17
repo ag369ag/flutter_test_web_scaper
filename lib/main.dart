@@ -59,13 +59,15 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     _screenSize = MediaQuery.of(context).size;
     double screenWidthNoPadding = _screenSize.width - 20;
-    if (screenWidthNoPadding > 185 && (screenWidthNoPadding - 5) < 370) {
-      _containerWidth = screenWidthNoPadding;
-    } else if ((screenWidthNoPadding - 5) > 369 &&
-        screenWidthNoPadding - 3 < 555) {
-      _containerWidth = ((screenWidthNoPadding - 25) / 2);
-    } else {
-      _containerWidth = ((screenWidthNoPadding - 50) / 4);
+    double widthHeightValue = _screenSize.width / _screenSize.height;
+    if (widthHeightValue < 1) {
+      //_containerWidth = ((screenWidthNoPadding - 25) / 2);
+      _containerWidth = (screenWidthNoPadding / 3) - 9;
+    }
+   
+    else {
+      //_containerWidth = ((screenWidthNoPadding - 50) / 4);
+      _containerWidth = (screenWidthNoPadding / 6) - 9;
     }
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -98,12 +100,15 @@ class _MainPageState extends State<MainPage> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Wrap(
-                      spacing: 5,
-                      runSpacing: 5,
+                      spacing: 0,
+                      runSpacing: 0,
+                      direction: Axis.horizontal,
                       runAlignment: WrapAlignment.center,
                       alignment: WrapAlignment.center,
                       children: mangaService.mangaListInfo.isNotEmpty
-                          ? mangaService.mangaListInfo
+                          ?
+                            //[]
+                            mangaService.mangaListInfo
                                 .map(
                                   (manga) => GestureDetector(
                                     onTap: () {
@@ -127,8 +132,8 @@ class _MainPageState extends State<MainPage> {
                                 .toList()
                           : [
                               Container(
-                                width: _screenSize.width - 10,
-                                height: _screenSize.height - 10,
+                                width: _screenSize.width - 20,
+                                height: _screenSize.height - 20,
                                 alignment: Alignment.center,
                                 child: CircularProgressIndicator(),
                               ),
@@ -143,42 +148,54 @@ class _MainPageState extends State<MainPage> {
       ),
       floatingActionButton: ListenableBuilder(
         listenable: mangaService,
-        builder: (_, _) => Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ComponentFloatingButton(
-              buttonFunction: () => mangaService.backPageClicked(),
-              isVisible: mangaService.showMenu,
-              buttonIcon: Icons.arrow_left_rounded,
-            ),
-            SizedBox(width: 10),
-            ComponentFloatingButton(
-              buttonFunction: () => mangaService.nextPageClicked(),
-              isVisible: mangaService.showMenu,
-              buttonIcon: Icons.arrow_right_rounded,
-            ),
-            SizedBox(width: 10),
-            ComponentFloatingButton(
-              buttonFunction: () => showSearchDialog(context),
-              isVisible: mangaService.showMenu,
-              buttonIcon: Icons.search,
-            ),
-            SizedBox(width: 10),
-            ComponentFloatingButton(
-              buttonFunction: () => showBookmarkedManga(context),
-              isVisible: mangaService.showMenu,
-              buttonIcon: Icons.bookmark_border_rounded,
-            ),
-            SizedBox(width: 10),
-            ComponentFloatingButton(
-              buttonFunction: () => mangaService.updateMenuState(),
-              isVisible: true,
-              buttonIcon: mangaService.showMenu
-                  ? Icons.keyboard_arrow_right_rounded
-                  : Icons.keyboard_arrow_left_rounded,
-            ),
-          ],
+        builder: (_, _) => SizedBox(
+          width: _screenSize.width * 0.9,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ComponentFloatingButton(
+                        buttonFunction: () => mangaService.backPageClicked(),
+                        isVisible: mangaService.showMenu,
+                        buttonIcon: Icons.arrow_left_rounded,
+                      ),
+                      SizedBox(width: 10),
+                      ComponentFloatingButton(
+                        buttonFunction: () => mangaService.nextPageClicked(),
+                        isVisible: mangaService.showMenu,
+                        buttonIcon: Icons.arrow_right_rounded,
+                      ),
+                      SizedBox(width: 10),
+                      ComponentFloatingButton(
+                        buttonFunction: () => showSearchDialog(context),
+                        isVisible: mangaService.showMenu,
+                        buttonIcon: Icons.search,
+                      ),
+                      SizedBox(width: 10),
+                      ComponentFloatingButton(
+                        buttonFunction: () => showBookmarkedManga(context),
+                        isVisible: mangaService.showMenu,
+                        buttonIcon: Icons.bookmark_border_rounded,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              ComponentFloatingButton(
+                buttonFunction: () => mangaService.updateMenuState(),
+                isVisible: true,
+                buttonIcon: mangaService.showMenu
+                    ? Icons.keyboard_arrow_right_rounded
+                    : Icons.keyboard_arrow_left_rounded,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -192,7 +209,7 @@ class _MainPageState extends State<MainPage> {
       builder: (context) {
         searchFieldController.clear();
         return Dialog(
-          insetPadding: EdgeInsets.zero,
+          insetPadding: EdgeInsets.all(15),
           child: SingleChildScrollView(
             child: Container(
               constraints: BoxConstraints(
@@ -265,41 +282,46 @@ class _MainPageState extends State<MainPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Saved manga", style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueGrey
-              ),),
-              SizedBox(height: 5,),
+              Text(
+                "Saved manga",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey,
+                ),
+              ),
+              SizedBox(height: 5),
               Expanded(
                 child: SingleChildScrollView(
                   child: ListenableBuilder(
                     listenable: mangaService,
                     builder: (_, _) => Column(
-                      children: mangaService.savedManga
-                          .map(
-                            (manga) => GestureDetector(
-                              onTap: () {
-                                manga.mangaClicked();
-                                Navigator.pop(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PageChapters(
-                                      mangaService: mangaService,
+                      children: mangaService.savedManga.isEmpty
+                          ? []
+                          : mangaService.savedManga
+                                .map(
+                                  (manga) => GestureDetector(
+                                    onTap: () {
+                                      manga.mangaClicked();
+                                      Navigator.pop(context);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PageChapters(
+                                            mangaService: mangaService,
+                                            manga: manga,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: ComponentSavedMangaDisplay(
                                       manga: manga,
+                                      removeMangaFunction: () =>
+                                          mangaService.removeSavedManga(manga),
                                     ),
                                   ),
-                                );
-                              },
-                              child: ComponentSavedMangaDisplay(
-                                manga: manga,
-                                removeMangaFunction: () =>
-                                    mangaService.removeSavedManga(manga),
-                              ),
-                            ),
-                          )
-                          .toList(),
+                                )
+                                .toList(),
                     ),
                   ),
                 ),

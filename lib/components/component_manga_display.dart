@@ -25,20 +25,24 @@ class ComponentMangaDisplay extends StatelessWidget {
     return Card(
       color: Colors.white,
       child: Container(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(7),
         width: containerWidth,
-        height: containerWidth * 1.24324,
+        // height: containerWidth * 1.24324,
+        height: containerWidth * 1.35,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             ListenableBuilder(
               listenable: manga,
               builder: (_, _) => SizedBox(
-                height: ((containerWidth - 20 ) * 0.94) ,
-                width: containerWidth - 20,
+                height: ((containerWidth - 14 ) * 0.94) ,
+                width: containerWidth - 14,
                 child: manga.mangaImage == null
                     ? Center(child: CircularProgressIndicator())
-                    : Image.memory(manga.mangaImage!, fit: BoxFit.fill),
+                    : ClipRRect(
+                      borderRadius: BorderRadiusGeometry.circular(10),
+                       child: Image.memory(manga.mangaImage!, fit: BoxFit.fill)),
               ),
             ),
             Row(
@@ -48,13 +52,13 @@ class ComponentMangaDisplay extends StatelessWidget {
                     manga.mangaTitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: (containerWidth*0.08)),
                   ),
                 ),
               ],
             ),
-
-            Text(manga.mangaStatus),
+            Text(manga.mangaStatus, style: TextStyle(fontSize: (containerWidth*0.08)),),
+            Spacer(),
             // Expanded(
             //   child: ListTile(
             //     title: Text(manga.mangaTitle, maxLines: 2,overflow: TextOverflow.ellipsis,),

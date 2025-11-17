@@ -42,12 +42,21 @@ class PageChapters extends StatelessWidget {
                   builder: (_, _) {
                     String saveStatus =
                         mangaService.savedManga
-                            .where((item) => item.mangaTitle == manga.mangaTitle)
+                            .where(
+                              (item) => item.mangaTitle == manga.mangaTitle,
+                            )
                             .isEmpty
                         ? "Save"
                         : "Saved";
                     return ElevatedButton(
-                      onPressed: () => mangaService.saveNewManga(manga),
+                      style: ButtonStyle(
+                        elevation: WidgetStatePropertyAll(
+                          saveStatus == "Save" ? 6 : 0,
+                        ),
+                      ),
+                      onPressed: saveStatus == "Save"
+                          ? () => mangaService.saveNewManga(manga)
+                          : null,
                       child: Text(saveStatus),
                     );
                   },
