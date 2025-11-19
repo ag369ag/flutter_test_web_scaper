@@ -37,6 +37,16 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.forEach {
+            output ->
+            val appName = "TestComposeNavigation-v${variant.versionName}(${variant.versionCode})"
+
+            setProperty("archivesBaseName", appName)
+        }
+    }
 }
 
 flutter {
