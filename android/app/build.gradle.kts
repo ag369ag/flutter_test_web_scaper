@@ -42,7 +42,7 @@ android {
         val variant = this
         variant.outputs.forEach {
             output ->
-            val appName = "TestComposeNavigation-v${variant.versionName}(${variant.versionCode})"
+            val appName = "Manga-v${variant.versionName}(${variant.versionCode})"
 
             setProperty("archivesBaseName", appName)
         }
